@@ -1,25 +1,25 @@
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Drawing
-$assetFolder=Join-Path $PSScriptRoot 'assets'
-New-Item -ItemType Directory -Force -Path $assetFolder | Out-Null
-$iconBitmap=New-Object System.Drawing.Bitmap 64,64
-$iconGraphics=[System.Drawing.Graphics]::FromImage($iconBitmap)
-$iconGraphics.SmoothingMode=[System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-$iconGraphics.Clear([System.Drawing.Color]::Transparent)
-$iconPath=New-Object System.Drawing.Drawing2D.GraphicsPath
-$iconPath.AddArc(2,2,28,28,180,90)
-$iconPath.AddArc(34,2,28,28,270,90)
-$iconPath.AddArc(34,34,28,28,0,90)
-$iconPath.AddArc(2,34,28,28,90,90)
-$iconPath.CloseFigure()
-$iconFill=New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(66,104,235))
-$iconGraphics.FillPath($iconFill,$iconPath)
-$iconPen=New-Object System.Drawing.Pen ([System.Drawing.Color]::White),4
-$iconPen.StartCap=[System.Drawing.Drawing2D.LineCap]::Round
-$iconPen.EndCap=[System.Drawing.Drawing2D.LineCap]::Round
-$iconGraphics.DrawLines($iconPen,[System.Drawing.Point[]]@((New-Object System.Drawing.Point 20,14),(New-Object System.Drawing.Point 20,44),(New-Object System.Drawing.Point 50,44)))
-$iconGraphics.DrawLines($iconPen,[System.Drawing.Point[]]@((New-Object System.Drawing.Point 14,20),(New-Object System.Drawing.Point 44,20),(New-Object System.Drawing.Point 44,50)))
-$iconHandle=$iconBitmap.GetHicon()
-$icon=[System.Drawing.Icon]::FromHandle($iconHandle)
-$iconStream=[IO.File]::Create((Join-Path $assetFolder 'HeavyShot.ico'))
-try { $icon.Save($iconStream) } finally { $iconStream.Dispose(); $icon.Dispose(); $iconPen.Dispose(); $iconFill.Dispose(); $iconPath.Dispose(); $iconGraphics.Dispose(); $iconBitmap.Dispose() }
+$folder=Join-Path $PSScriptRoot 'assets'
+New-Item -ItemType Directory -Force -Path $folder,(Join-Path $PSScriptRoot 'brand') | Out-Null
+$stream=[IO.File]::Create((Join-Path $folder 'HeavyShot.ico'))
+$writer=New-Object IO.BinaryWriter($stream)
+$images=@()
+foreach($size in @(16,24,32,48,64,128,256)){
+ $bitmap=New-Object Drawing.Bitmap $size,$size
+ $g=[Drawing.Graphics]::FromImage($bitmap);$g.Clear([Drawing.Color]::Transparent)
+ $g.ScaleTransform(($size/64.0),($size/64.0));$g.SmoothingMode=[Drawing.Drawing2D.SmoothingMode]::AntiAlias
+ $p=New-Object Drawing.Drawing2D.GraphicsPath
+ $p.AddArc(0,0,24,24,180,90);$p.AddArc(40,0,24,24,270,90);$p.AddArc(40,40,24,24,0,90);$p.AddArc(0,40,24,24,90,90);$p.CloseFigure()
+ $g.FillPath([Drawing.Brushes]::Black,$p)
+ foreach($r in @(@(8,8,16,6),@(8,8,6,16),@(40,8,16,6),@(50,8,6,16),@(8,50,16,6),@(8,40,6,16),@(40,50,16,6),@(50,40,6,16),@(22,20,6,24),@(36,20,6,24),@(28,29,8,6))){$g.FillRectangle([Drawing.Brushes]::White,[int]$r[0],[int]$r[1],[int]$r[2],[int]$r[3])}
+ $memory=New-Object IO.MemoryStream;$bitmap.Save($memory,[Drawing.Imaging.ImageFormat]::Png)
+ $images+=,@{size=$size;data=$memory.ToArray()}
+ if($size -eq 256){$bitmap.Save((Join-Path $PSScriptRoot 'brand/HeavyShot-icon.png'),[Drawing.Imaging.ImageFormat]::Png)}
+ $memory.Dispose();$p.Dispose();$g.Dispose();$bitmap.Dispose()
+}
+try {
+ $writer.Write([uint16]0);$writer.Write([uint16]1);$writer.Write([uint16]$images.Count);$offset=6+16*$images.Count
+ foreach($im in $images){$dimension=if($im.size -eq 256){0}else{$im.size};$writer.Write([byte]$dimension);$writer.Write([byte]$dimension);$writer.Write([byte]0);$writer.Write([byte]0);$writer.Write([uint16]1);$writer.Write([uint16]32);$writer.Write([uint32]$im.data.Length);$writer.Write([uint32]$offset);$offset+=$im.data.Length}
+ foreach($im in $images){$writer.Write([byte[]]$im.data)}
+} finally {$writer.Dispose();$stream.Dispose()}

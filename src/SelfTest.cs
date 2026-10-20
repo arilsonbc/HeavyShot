@@ -46,6 +46,30 @@ namespace HeavyShot
             Directory.CreateDirectory(destination);
             try
             {
+                using(HomeForm home=new HomeForm(false,false,true))
+                using(Bitmap preview=new Bitmap(home.ClientSize.Width,home.ClientSize.Height))
+                {
+                    home.Show();Application.DoEvents();home.Controls[0].DrawToBitmap(preview,home.Controls[0].ClientRectangle);home.Hide();
+                    preview.Save(Path.Combine(destination,"home-preview.png"),ImageFormat.Png);
+                    Check(home.ClientSize==new Size(640,654),"tela inicial redesenhada renderiza sem iniciar atalhos ou bandeja");
+                }
+                using(ActionButton button=new ActionButton("","Teste sem borda"))
+                {
+                    button.Size=new Size(40,40);button.Glyph="pen";button.CreateControl();
+                    Check(!typeof(ButtonBase).IsAssignableFrom(button.GetType()),"ícones independentes do acabamento nativo de botões");
+                    foreach(bool active in new bool[]{false,true})
+                    using(Bitmap image=new Bitmap(40,40))
+                    {
+                        button.Active=active;button.DrawToBitmap(image,new Rectangle(0,0,40,40));
+                        bool clean=true;
+                        for(int x=0;x<40;x++)for(int y=0;y<40;y++)
+                            if(x<8 || x>=32 || y<8 || y>=32)
+                            {Color pixel=image.GetPixel(x,y);if(pixel.R<200 || pixel.G<200 || pixel.B<200)clean=false;}
+                        Check(clean,"ausência de contorno escuro ao redor do ícone: ativo="+active);
+                    }
+                    int clicks=0;button.Click+=delegate{clicks++;};button.PerformClick();button.Enabled=false;button.PerformClick();
+                    Check(clicks==1,"botão personalizado respeita clique e estado desabilitado");
+                }
                 Check(Geometry.Between(new Point(80,70),new Point(10,20))==new Rectangle(10,20,70,50),"seleção em direção inversa");
                 using(CaptureDocument d=new CaptureDocument(new Bitmap(300,200)))
                 {
@@ -113,6 +137,7 @@ namespace HeavyShot
                         Check(!toolbar.Bounds.IntersectsWith(actions.Bounds),"barras não se sobrepõem: "+area);
                     }
                     d.Selection=new Rectangle(120,130,800,480);form.RefreshState();
+                    using(Bitmap preview=new Bitmap(toolbar.Width,toolbar.Height)) { toolbar.DrawToBitmap(preview,toolbar.ClientRectangle); preview.Save(Path.Combine(destination,"toolbar-preview.png"),ImageFormat.Png); }
                     using(Bitmap preview=new Bitmap(form.Width,form.Height)) { form.DrawToBitmap(preview,form.ClientRectangle); preview.Save(Path.Combine(destination,"editor-preview.png"),ImageFormat.Png); }
                     ActionButton color=(ActionButton)typeof(CaptureForm).GetField("colorButton",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(form);
                     color.PerformClick();Application.DoEvents();Check(palette.Visible,"painel de cor abre pelo botão");

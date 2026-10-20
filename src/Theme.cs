@@ -7,14 +7,14 @@ namespace HeavyShot
 {
     internal static class Theme
     {
-        internal static readonly Color Background = Color.FromArgb(245,246,249);
+        internal static readonly Color Background = Color.FromArgb(246,246,246);
         internal static readonly Color Surface = Color.White;
-        internal static readonly Color Accent = Color.FromArgb(66,104,235);
-        internal static readonly Color AccentSoft = Color.FromArgb(234,240,255);
-        internal static readonly Color Muted = Color.FromArgb(105,115,134);
-        internal static readonly Color Text = Color.FromArgb(32,38,51);
-        internal static readonly Color Icon = Color.FromArgb(108,118,137);
-        internal static readonly Color Border = Color.FromArgb(224,228,236);
+        internal static readonly Color Accent = Color.Black;
+        internal static readonly Color AccentSoft = Color.FromArgb(235,235,235);
+        internal static readonly Color Muted = Color.FromArgb(110,110,110);
+        internal static readonly Color Text = Color.FromArgb(20,20,20);
+        internal static readonly Color Icon = Color.FromArgb(100,100,100);
+        internal static readonly Color Border = Color.FromArgb(225,225,225);
         internal static readonly Font Body = new Font("Segoe UI", 10);
         internal static GraphicsPath Rounded(Rectangle r, int radius)
         {

@@ -10,8 +10,8 @@ using System.Xml.Serialization;
 [assembly: AssemblyDescription("Captura e anotação portátil para Windows")]
 [assembly: AssemblyCompany("HeavyShot")]
 [assembly: AssemblyProduct("HeavyShot")]
-[assembly: AssemblyVersion("0.2.0.0")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyVersion("0.3.0.0")]
+[assembly: AssemblyFileVersion("0.3.0.0")]
 
 namespace HeavyShot
 {
@@ -46,7 +46,7 @@ namespace HeavyShot
 
     internal static class Program
     {
-        internal static readonly string Version="0.2.0";
+        internal static readonly string Version="0.3.0";
         [STAThread] private static int Main(string[] args)
         {
             Native.EnableDpi(); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);

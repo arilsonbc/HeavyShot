@@ -1,4 +1,4 @@
-HeavyShot 0.2.0 — Windows portable
+HeavyShot 0.3.0 — Windows portable
 
 1. Extraia o ZIP para uma pasta com permissão de escrita.
 2. Execute HeavyShot.exe. Nenhum instalador ou acesso de administrador é necessário.

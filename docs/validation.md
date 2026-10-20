@@ -1,4 +1,16 @@
-# Validação de 0.1.0
+# Validação de 0.2.0
+
+- Interface baseada no layout editável do Figma: https://www.figma.com/design/prmFuOyE1k4FQKpfj5i2UZ?node-id=3-37
+- Painéis claros e arredondados; barra vertical junto à seleção; ações abaixo dela; ícones desenhados na grade de 24 px; estados ativo/inativo e painel de cor, espessura e opacidade.
+- Adaptação nativa para WinForms com Segoe UI, seletores de formato e espessura nativos do Windows. As prévias não são usadas como imagens de interface.
+- 34 verificações automatizadas aprovadas, incluindo renderização da opacidade, barras em três posições de borda, ausência de sobreposição e interação com o painel de ajustes.
+- Prévias do editor e do painel de cor renderizadas a partir do formulário executável e inspecionadas visualmente.
+- Captura real em memória em 1920 × 1080 validada com e sem cursor; pixels variados e opacos, sem gravação da imagem do desktop.
+- Pacote portátil extraído em outra pasta e testes repetidos; hash do executável conferido.
+
+Limites: não houve teste manual completo do clipboard entre aplicativos nem validação com monitores de DPI misto/HDR. No desktop Windows usado para captura, o painel tem o espaço disponível; resoluções com altura menor que a barra vertical (534 px) exigem adaptação adicional. O projeto continua portátil, sem instalador ou assinatura digital.
+
+## Histórico — 0.1.0
 
 - Compilação .NET Framework concluída, sem erros ou avisos do compilador.
 - 21 verificações automatizadas aprovadas: direção da seleção, recorte, coordenadas, limites, seleção vazia, renderização de sete ferramentas, desfazer/refazer, invalidação do refazer, eventos de arraste/movimentação/desenho e reabertura de PNG/JPEG.

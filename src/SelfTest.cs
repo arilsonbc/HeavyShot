@@ -73,8 +73,16 @@ namespace HeavyShot
                         }
                     }
                 }
+                using(CaptureDocument alphaDoc=new CaptureDocument(new Bitmap(100,100)))
+                {
+                    using(Graphics g=Graphics.FromImage(alphaDoc.Background))g.Clear(Color.White);
+                    alphaDoc.Selection=new Rectangle(0,0,100,100);
+                    Annotation translucent=Shape(Tool.Line,new Point(10,50),new Point(90,50),Color.Red);translucent.Opacity=50;alphaDoc.Add(translucent);
+                    using(Bitmap b=alphaDoc.RenderSelection())Check(b.GetPixel(50,50).R>240 && b.GetPixel(50,50).G>110 && b.GetPixel(50,50).G<150,"opacidade aplicada à imagem exportada");
+                }
+                Settings editorSettings=new Settings{Persist=false};
                 using(CaptureDocument d=new CaptureDocument(Demo(new Size(1200,800))))
-                using(CaptureForm form=new CaptureForm(d,new Rectangle(0,0,1200,800),new Settings(),false))
+                using(CaptureForm form=new CaptureForm(d,new Rectangle(0,0,1200,800),editorSettings,false))
                 {
                     form.CreateControl();
                     Mouse(form,"OnMouseDown",900,600); Mouse(form,"OnMouseMove",100,120); Mouse(form,"OnMouseUp",100,120);
@@ -93,7 +101,29 @@ namespace HeavyShot
                         using(Bitmap roundtrip=new Bitmap(jpg)) Check(roundtrip.Size==d.Selection.Size,"JPEG exportado reabre com dimensões exatas");
                     }
                     form.Show(); Application.DoEvents(); form.RefreshState(); Application.DoEvents();
+                    Panel toolbar=(Panel)typeof(CaptureForm).GetField("toolbar",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(form);
+                    Panel actions=(Panel)typeof(CaptureForm).GetField("actions",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(form);
+                    Panel palette=(Panel)typeof(CaptureForm).GetField("options",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(form);
+                    Check(toolbar.Height>toolbar.Width*5,"barra de ferramentas vertical");
+                    Rectangle viewport=new Rectangle(0,0,1200,800);
+                    foreach(Rectangle area in new Rectangle[]{new Rectangle(5,5,150,140),new Rectangle(1000,580,195,215),new Rectangle(0,0,1200,800)})
+                    {
+                        d.Selection=area;form.PositionPanels(viewport);
+                        Check(viewport.Contains(toolbar.Bounds) && viewport.Contains(actions.Bounds),"barras visíveis junto às bordas: "+area);
+                        Check(!toolbar.Bounds.IntersectsWith(actions.Bounds),"barras não se sobrepõem: "+area);
+                    }
+                    d.Selection=new Rectangle(120,130,800,480);form.RefreshState();
                     using(Bitmap preview=new Bitmap(form.Width,form.Height)) { form.DrawToBitmap(preview,form.ClientRectangle); preview.Save(Path.Combine(destination,"editor-preview.png"),ImageFormat.Png); }
+                    ActionButton color=(ActionButton)typeof(CaptureForm).GetField("colorButton",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(form);
+                    color.PerformClick();Application.DoEvents();Check(palette.Visible,"painel de cor abre pelo botão");
+                    Check(viewport.Contains(palette.Bounds),"painel de ajustes permanece dentro da tela");
+                    Check(!palette.Bounds.IntersectsWith(actions.Bounds),"painel de ajustes não encobre barra de ações");
+                    OpacitySlider alpha=null;NumericUpDown width=null;
+                    foreach(Control c in palette.Controls){if(c is OpacitySlider)alpha=(OpacitySlider)c;if(c is NumericUpDown)width=(NumericUpDown)c;}
+                    alpha.Value=45;width.Value=6;
+                    Check(editorSettings.Opacity==45 && editorSettings.Stroke==6,"controles alteram opacidade e espessura");
+                    using(Bitmap preview=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(preview,form.ClientRectangle);preview.Save(Path.Combine(destination,"palette-preview.png"),ImageFormat.Png);}
+                    color.PerformClick();Check(!palette.Visible,"painel de cor fecha pelo botão");
                     form.Hide();
                 }
                 log.AppendLine("TOTAL: "+checks+" verificações aprovadas."); File.WriteAllText(Path.Combine(destination,"test-results.txt"),log.ToString(),Encoding.UTF8); return 0;

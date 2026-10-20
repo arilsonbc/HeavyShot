@@ -1,9 +1,11 @@
-HeavyShot 0.1.0 — Windows portable
+HeavyShot 0.2.0 — Windows portable
 
 1. Extraia o ZIP para uma pasta com permissão de escrita.
 2. Execute HeavyShot.exe. Nenhum instalador ou acesso de administrador é necessário.
 3. Clique em Nova captura ou pressione Ctrl+Shift+S.
 4. Arraste para selecionar uma região. Use a barra para anotar.
+   As ferramentas ficam à direita da seleção; copiar e salvar ficam abaixo.
+   Clique no círculo colorido para ajustar cor, espessura e opacidade.
 5. Ctrl+C ou Enter copia a imagem; Ctrl+S salva PNG, JPEG ou BMP.
 
 V: selecionar/mover/redimensionar; P: caneta; M: marcador; L: linha;

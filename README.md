@@ -2,12 +2,13 @@
 
 Captura de tela e anotação para Windows, em versão **portable**. Extraia e execute, sem instalador e sem administrador.
 
-## Primeira versão — 0.1.0
+## Versão 0.2.0 — interface renovada
 
 - Captura da área virtual dos monitores e seleção por arraste.
 - Seleção com movimentação e alças para redimensionar.
 - Caneta, marcador, linha, seta, retângulo, elipse e texto.
-- Cores, espessura e desfazer/refazer.
+- Painéis claros e arredondados: ferramentas à direita, ações abaixo da seleção.
+- Ícones vetoriais, cor, espessura, opacidade e desfazer/refazer.
 - Copiar a imagem ou salvar em PNG, JPEG e BMP.
 - Atalho global Ctrl+Shift+S e Print Screen opcional.
 - Captura opcional do cursor, bandeja e preferências ao lado do executável.
@@ -15,7 +16,7 @@ Captura de tela e anotação para Windows, em versão **portable**. Extraia e ex
 
 ## Usar
 
-Baixe `HeavyShot-0.1.0-portable.zip` nos Releases, extraia e execute `HeavyShot.exe`.
+Baixe `HeavyShot-0.2.0-portable.zip` nos Releases, extraia e execute `HeavyShot.exe`.
 Requer Windows 10/11 com .NET Framework 4.8. O aplicativo não precisa do SDK .NET.
 
 Clique em **Nova captura**, selecione uma área e use a barra flutuante. **Ctrl+C** ou **Enter** copia; **Ctrl+S** salva; **Esc** cancela.

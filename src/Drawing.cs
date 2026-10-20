@@ -13,6 +13,7 @@ namespace HeavyShot
         public Tool Tool;
         public Color Color = Color.FromArgb(255, 89, 94);
         public float Width = 3;
+        public int Opacity = 100;
         public List<Point> Points = new List<Point>();
         public string Text = "";
         public Point Start { get { return Points[0]; } }
@@ -22,7 +23,7 @@ namespace HeavyShot
         {
             if (Points.Count == 0) return;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Color ink = Tool == Tool.Marker ? Color.FromArgb(85, Color) : Color;
+            Color ink = Color.FromArgb((Tool == Tool.Marker ? 85 : 255)*Math.Max(1,Math.Min(100,Opacity))/100,Color);
             using (Pen pen = new Pen(ink, Tool == Tool.Marker ? Width * 5 : Width))
             {
                 pen.StartCap = LineCap.Round;
@@ -46,7 +47,7 @@ namespace HeavyShot
                 else if (Tool == Tool.Text)
                 {
                     using (Font font = new Font("Segoe UI", Math.Max(16, Width * 5), FontStyle.Bold, GraphicsUnit.Pixel))
-                    using (Brush brush = new SolidBrush(Color))
+                    using (Brush brush = new SolidBrush(ink))
                         g.DrawString(Text, font, brush, Start, StringFormat.GenericTypographic);
                 }
             }

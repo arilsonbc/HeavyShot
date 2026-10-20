@@ -13,8 +13,9 @@ namespace HeavyShot
         private readonly CaptureDocument document;
         private readonly Settings settings;
         private readonly Rectangle desktop;
-        private readonly Panel toolbar=new Panel();
-        private readonly Panel options=new Panel();
+        private readonly FloatingPanel toolbar=new FloatingPanel();
+        private readonly FloatingPanel options=new FloatingPanel();
+        private readonly FloatingPanel actions=new FloatingPanel();
         private readonly ToolTip tips=new ToolTip();
         private readonly Dictionary<Tool,ActionButton> tools=new Dictionary<Tool,ActionButton>();
         private ActionButton undo,redo,colorButton;
@@ -26,12 +27,17 @@ namespace HeavyShot
         private Annotation draft;
         private Color ink;
         private float stroke;
+        private int opacity;
+        private bool paletteOpen;
+        private Label hexLabel,opacityLabel;
+        private ComboBox format;
         private readonly bool demo;
 
         internal CaptureForm(CaptureDocument doc,Rectangle bounds,Settings settings,bool demo)
         {
             document=doc; desktop=bounds; this.settings=settings; this.demo=demo;
             ink=Color.FromArgb(settings.Ink); stroke=Math.Max(1,Math.Min(12,settings.Stroke));
+            opacity=Math.Max(1,Math.Min(100,settings.Opacity));
             Text="HeavyShot — captura"; FormBorderStyle=FormBorderStyle.None;
             AutoScaleMode=AutoScaleMode.None; StartPosition=FormStartPosition.Manual; Bounds=bounds;
             TopMost=true; ShowInTaskbar=false; DoubleBuffered=true; KeyPreview=true; Cursor=Cursors.Cross;
@@ -41,41 +47,56 @@ namespace HeavyShot
         }
         private void BuildToolbar()
         {
-            toolbar.BackColor=Theme.Background; toolbar.Size=new Size(552,48); toolbar.Visible=false;
-            toolbar.Padding=new Padding(5); Controls.Add(toolbar);
-            Tool[] kinds={Tool.Select,Tool.Pen,Tool.Marker,Tool.Line,Tool.Arrow,Tool.Rectangle,Tool.Ellipse,Tool.Text};
-            string[] icons={"↖","✎","▰","╱","↗","□","○","T"};
-            string[] names={"Selecionar / mover (V)","Caneta (P)","Marcador (M)","Linha (L)","Seta (A)","Retângulo (R)","Elipse (E)","Texto (T)"};
+            toolbar.Size=new Size(76,534); toolbar.Visible=false; Controls.Add(toolbar);
+            Tool[] kinds={Tool.Select,Tool.Pen,Tool.Line,Tool.Arrow,Tool.Rectangle,Tool.Ellipse,Tool.Marker,Tool.Text};
+            string[] icons={"select","pen","line","arrow","rect","ellipse","marker","text"};
+            string[] names={"Selecionar / mover (V)","Caneta (P)","Linha (L)","Seta (A)","Retângulo (R)","Elipse (E)","Marcador (M)","Texto (T)"};
             for(int i=0;i<kinds.Length;i++)
             {
-                Tool choice=kinds[i]; ActionButton b=AddButton(toolbar,icons[i],names[i],6+i*41,6,38);
+                Tool choice=kinds[i]; ActionButton b=AddButton(toolbar,"",names[i],18,14+i*44,40);b.Height=40;b.Glyph=icons[i];
                 b.Click+=delegate { SetTool(choice); }; tools.Add(choice,b);
             }
-            AddButton(toolbar,"↶","Desfazer (Ctrl+Z)",340,6,38).Click+=delegate { document.Undo(); RefreshState(); };
-            undo=(ActionButton)toolbar.Controls[toolbar.Controls.Count-1];
-            redo=AddButton(toolbar,"↷","Refazer (Ctrl+Y)",381,6,38); redo.Click+=delegate { document.Redo(); RefreshState(); };
-            ActionButton copy=AddButton(toolbar,"Copiar","Copiar imagem (Ctrl+C / Enter)",425,6,66); copy.Primary=true; copy.Click+=delegate { CopyImage(); };
-            AddButton(toolbar,"×","Cancelar (Esc)",498,6,42).Click+=delegate { Close(); };
+            AddDivider(toolbar,18,368,40,1);
+            colorButton=AddButton(toolbar,"","Cor e espessura",18,378,40);colorButton.Height=40;colorButton.Swatch=ink;
+            colorButton.Click+=delegate { paletteOpen=!paletteOpen;RefreshState(); };
+            AddDivider(toolbar,18,425,40,1);
+            undo=AddButton(toolbar,"","Desfazer (Ctrl+Z)",18,435,40);undo.Height=40;undo.Glyph="undo";undo.Click+=delegate { document.Undo();RefreshState(); };
+            redo=AddButton(toolbar,"","Refazer (Ctrl+Y)",18,479,40);redo.Height=40;redo.Glyph="redo";redo.Click+=delegate { document.Redo();RefreshState(); };
 
-            options.Size=new Size(354,45); options.BackColor=Theme.Background; options.Visible=false; Controls.Add(options);
-            colorButton=AddButton(options,"●","Escolher cor",5,5,36); colorButton.ForeColor=ink; colorButton.Click+=delegate { PickColor(); };
-            int[] colors={unchecked((int)0xffff595e),unchecked((int)0xffffca3a),unchecked((int)0xff8ac926),unchecked((int)0xff1982c4),unchecked((int)0xffffffff)};
+            actions.Size=new Size(370,72);actions.Visible=false;Controls.Add(actions);
+            format=new ComboBox { DropDownStyle=ComboBoxStyle.DropDownList,FlatStyle=FlatStyle.Flat,BackColor=Theme.Surface,ForeColor=Theme.Text,Font=new Font("Segoe UI",9),AccessibleName="Formato da imagem" };
+            format.Items.AddRange(new object[]{"PNG","JPEG","BMP"});format.SelectedIndex=0;format.SetBounds(20,23,65,28);actions.Controls.Add(format);
+            AddDivider(actions,96,23,1,24);
+            ActionButton save=AddButton(actions,"","Salvar imagem (Ctrl+S)",104,16,40);save.Height=40;save.Glyph="save";save.Click+=delegate{SaveImage();};
+            ActionButton copy=AddButton(actions,"Copiar  ↵","Copiar imagem (Ctrl+C / Enter)",154,16,144);copy.Height=40;copy.Glyph="copy";copy.Primary=true;copy.Click+=delegate{CopyImage();};
+            AddDivider(actions,307,23,1,24);
+            ActionButton close=AddButton(actions,"","Cancelar (Esc)",316,16,36);close.Height=40;close.Glyph="close";close.Click+=delegate{Close();};
+
+            options.Size=new Size(300,296);options.Visible=false;Controls.Add(options);
+            options.Controls.Add(Theme.Label("Cor e espessura",26,24,210,26,10,Theme.Text));
+            ActionButton dismiss=AddButton(options,"","Fechar painel",254,18,26);dismiss.Glyph="close";dismiss.Click+=delegate{paletteOpen=false;RefreshState();};
+            int[] colors={unchecked((int)0xfff15c62),unchecked((int)0xfff4bb47),unchecked((int)0xff46a789),unchecked((int)0xff4268eb),unchecked((int)0xff8e6bd1),unchecked((int)0xff202633)};
             for(int i=0;i<colors.Length;i++)
             {
-                Color c=Color.FromArgb(colors[i]); ActionButton swatch=AddButton(options,"●","Cor "+c.Name,45+i*27,5,24); swatch.ForeColor=c;
+                Color c=Color.FromArgb(colors[i]); ActionButton swatch=AddButton(options,"","Cor "+c.Name,24+i*40,62,34);swatch.Swatch=c;
                 swatch.Click+=delegate { ink=c; RememberStyle(); };
             }
-            NumericUpDown width=new NumericUpDown { Minimum=1,Maximum=12,Value=(decimal)stroke,Location=new Point(185,10),Size=new Size(45,26),BackColor=Theme.Surface,ForeColor=Color.White,BorderStyle=BorderStyle.FixedSingle,AccessibleName="Espessura" };
+            hexLabel=Theme.Label("#"+ink.R.ToString("X2")+ink.G.ToString("X2")+ink.B.ToString("X2"),26,109,150,24,9,Theme.Muted);options.Controls.Add(hexLabel);
+            AddButton(options,"Mais cores…","Escolher outra cor",168,102,108).Click+=delegate{PickColor();};
+            options.Controls.Add(Theme.Label("Espessura",26,150,120,22,9,Theme.Muted));
+            NumericUpDown width=new NumericUpDown { Minimum=1,Maximum=12,Value=(decimal)stroke,Location=new Point(214,148),Size=new Size(60,26),BackColor=Theme.Surface,ForeColor=Theme.Text,BorderStyle=BorderStyle.FixedSingle,AccessibleName="Espessura" };
             width.ValueChanged+=delegate { stroke=(float)width.Value; RememberStyle(); }; options.Controls.Add(width); tips.SetToolTip(width,"Espessura do traço");
-            AddButton(options,"Salvar","Salvar imagem (Ctrl+S)",239,5,68).Click+=delegate { SaveImage(); };
-            AddButton(options,"⛶","Selecionar tudo (Ctrl+A)",311,5,36).Click+=delegate { document.Selection=new Rectangle(Point.Empty,document.Background.Size); RefreshState(); };
+            for(int i=0;i<3;i++){int value=new int[]{1,3,6}[i];ActionButton preset=AddButton(options,value+" px","Espessura "+value,26+i*60,180,52);preset.Click+=delegate{width.Value=value;};}
+            options.Controls.Add(Theme.Label("Opacidade",26,224,140,22,9,Theme.Muted));opacityLabel=Theme.Label(opacity+"%",220,224,60,22,9,Theme.Text);options.Controls.Add(opacityLabel);
+            OpacitySlider alpha=new OpacitySlider{Value=opacity};alpha.SetBounds(24,246,252,28);alpha.ValueChanged+=delegate{opacity=alpha.Value;opacityLabel.Text=opacity+"%";RememberStyle();};options.Controls.Add(alpha);
         }
+        private void AddDivider(Panel parent,int x,int y,int w,int h){Panel p=new Panel{BackColor=Theme.Border};p.SetBounds(x,y,w,h);parent.Controls.Add(p);}
         private ActionButton AddButton(Panel parent,string text,string hint,int x,int y,int width)
         {
             ActionButton b=new ActionButton(text,hint); b.SetBounds(x,y,width,34);
             parent.Controls.Add(b); tips.SetToolTip(b,hint); return b;
         }
-        private void RememberStyle() { settings.Ink=ink.ToArgb(); settings.Stroke=(int)stroke; colorButton.ForeColor=ink; colorButton.Invalidate(); settings.Save(); }
+        private void RememberStyle() { settings.Ink=ink.ToArgb(); settings.Stroke=(int)stroke;settings.Opacity=opacity;colorButton.Swatch=ink;colorButton.Invalidate();if(hexLabel!=null)hexLabel.Text="#"+ink.R.ToString("X2")+ink.G.ToString("X2")+ink.B.ToString("X2");settings.Save(); }
         private void PickColor()
         { using(ColorDialog d=new ColorDialog { Color=ink,FullOpen=true }) if(d.ShowDialog(this)==DialogResult.OK) { ink=d.Color; RememberStyle(); } }
         private void SetTool(Tool next) { tool=next; Cursor=next==Tool.Select ? Cursors.SizeAll : next==Tool.Text ? Cursors.IBeam : Cursors.Cross; RefreshState(); }
@@ -83,7 +104,8 @@ namespace HeavyShot
         internal void RefreshState()
         {
             bool selected=document.Selection.Width>=2 && document.Selection.Height>=2;
-            toolbar.Visible=options.Visible=selected && !selecting && !moving && !resizing;
+            toolbar.Visible=actions.Visible=selected && !selecting && !moving && !resizing;
+            options.Visible=toolbar.Visible && paletteOpen;
             foreach(KeyValuePair<Tool,ActionButton> pair in tools) { pair.Value.Active=pair.Key==tool; pair.Value.Invalidate(); }
             undo.Enabled=document.CanUndo; redo.Enabled=document.CanRedo;
             if(selected) PlaceToolbar(); Invalidate();
@@ -92,11 +114,37 @@ namespace HeavyShot
         {
             Rectangle screen=Screen.FromRectangle(new Rectangle(document.Selection.X+desktop.X,document.Selection.Y+desktop.Y,document.Selection.Width,document.Selection.Height)).Bounds;
             screen.Offset(-desktop.X,-desktop.Y);
-            int x=Math.Max(screen.Left+8,Math.Min(document.Selection.Right-toolbar.Width,screen.Right-toolbar.Width-8));
-            int y=document.Selection.Bottom+10;
-            if(y+102>screen.Bottom) y=Math.Max(screen.Top+8,document.Selection.Top-104);
-            toolbar.Location=new Point(x,y); options.Location=new Point(x+Math.Max(0,toolbar.Width-options.Width),y+53);
-            toolbar.BringToFront(); options.BringToFront();
+            screen=Rectangle.Intersect(screen,ClientRectangle);
+            PositionPanels(screen);
+        }
+        internal void PositionPanels(Rectangle screen)
+        {
+            Rectangle s=document.Selection;
+            int x=s.Right+6;
+            if(x+toolbar.Width>screen.Right) x=s.Left-toolbar.Width-6;
+            x=Math.Max(screen.Left,Math.Min(x,screen.Right-toolbar.Width));
+            int y=Math.Max(screen.Top,Math.Min(s.Top-5,screen.Bottom-toolbar.Height));
+            toolbar.Location=new Point(x,y);
+            int ax=Math.Max(screen.Left,Math.Min(s.Right-actions.Width+6,screen.Right-actions.Width));
+            int ay=s.Bottom+6;
+            if(ay+actions.Height>screen.Bottom)ay=s.Top-actions.Height-6;
+            ay=Math.Max(screen.Top,Math.Min(ay,screen.Bottom-actions.Height));
+            // For a full-screen selection, avoid overlapping the lower toolbar buttons.
+            Rectangle actionBounds=new Rectangle(ax,ay,actions.Width,actions.Height);
+            if(actionBounds.IntersectsWith(toolbar.Bounds))
+            {
+                Rectangle[] candidates={new Rectangle(toolbar.Left-actions.Width-6,ay,actions.Width,actions.Height),new Rectangle(toolbar.Right+6,ay,actions.Width,actions.Height),new Rectangle(ax,toolbar.Top-actions.Height-6,actions.Width,actions.Height),new Rectangle(ax,toolbar.Bottom+6,actions.Width,actions.Height)};
+                foreach(Rectangle candidate in candidates)if(screen.Contains(candidate) && !candidate.IntersectsWith(toolbar.Bounds)){ax=candidate.X;ay=candidate.Y;break;}
+            }
+            actions.Location=new Point(ax,ay);
+            int px=toolbar.Right+6;
+            if(px+options.Width>screen.Right)px=toolbar.Left-options.Width-6;
+            px=Math.Max(screen.Left,Math.Min(px,screen.Right-options.Width));
+            int py=Math.Max(screen.Top,Math.Min(toolbar.Top+Math.Min(360,toolbar.Height-options.Height),screen.Bottom-options.Height));
+            if(new Rectangle(px,py,options.Width,options.Height).IntersectsWith(actions.Bounds))
+            { int above=actions.Top-options.Height-6;py=above>=screen.Top?above:Math.Min(screen.Bottom-options.Height,actions.Bottom+6); }
+            options.Location=new Point(px,py);
+            toolbar.BringToFront();actions.BringToFront();options.BringToFront();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -108,7 +156,7 @@ namespace HeavyShot
                 foreach(Annotation item in document.Items) item.Draw(g);
                 if(draft!=null) draft.Draw(g); g.Restore(state);
             }
-            using(Brush shade=new SolidBrush(Color.FromArgb(145,8,11,18)))
+            using(Brush shade=new SolidBrush(Color.FromArgb(100,32,38,51)))
             {
                 if(r.Width<2 || r.Height<2) g.FillRectangle(shade,ClientRectangle);
                 else
@@ -122,12 +170,17 @@ namespace HeavyShot
             if(r.Width>=2 && r.Height>=2)
             {
                 using(Pen border=new Pen(Theme.Accent,1)) g.DrawRectangle(border,r.X,r.Y,r.Width-1,r.Height-1);
-                foreach(Rectangle handle in Handles(r)) { using(Brush b=new SolidBrush(Color.White)) g.FillRectangle(b,handle); }
+                foreach(Rectangle handle in Handles(r)) { using(Brush b=new SolidBrush(Color.White))g.FillRectangle(b,handle);using(Pen p=new Pen(Theme.Accent))g.DrawRectangle(p,handle); }
                 string text=r.Width+" × "+r.Height+" px";
                 Size s=TextRenderer.MeasureText(text,Theme.Body);
                 Rectangle badge=new Rectangle(r.Left,Math.Max(0,r.Top-29),s.Width+16,25);
-                using(Brush b=new SolidBrush(Theme.Background)) g.FillRectangle(b,badge);
-                TextRenderer.DrawText(g,text,Theme.Body,badge,Color.White,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+                using(GraphicsPath p=Theme.Rounded(badge,6))using(Brush b=new SolidBrush(Theme.Surface))g.FillPath(b,p);
+                TextRenderer.DrawText(g,text,Theme.Body,badge,Theme.Text,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);
+                string hint="Esc  cancelar     ·     Ctrl+Z  desfazer     ·     Enter  copiar";
+                Size hintSize=TextRenderer.MeasureText(hint,Theme.Body);
+                Rectangle help=new Rectangle((Width-hintSize.Width-24)/2,Height-46,hintSize.Width+24,32);
+                if(!help.IntersectsWith(toolbar.Bounds) && !help.IntersectsWith(actions.Bounds) && (!options.Visible || !help.IntersectsWith(options.Bounds)))
+                {using(GraphicsPath p=Theme.Rounded(help,9))using(Brush b=new SolidBrush(Theme.Surface))g.FillPath(b,p);TextRenderer.DrawText(g,hint,Theme.Body,help,Theme.Muted,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter);}
             }
             else
             {
@@ -136,7 +189,7 @@ namespace HeavyShot
                 string title="Arraste para selecionar uma área";
                 Rectangle message=new Rectangle(display.Left+Math.Max(0,(display.Width-600)/2),display.Top+Math.Max(25,display.Height/2-36),600,72);
                 using(Brush b=new SolidBrush(Theme.Background)) g.FillRectangle(b,message);
-                using(Font titleFont=new Font("Segoe UI",18)) TextRenderer.DrawText(g,title,titleFont,new Rectangle(message.X,message.Y+8,600,34),Color.White,TextFormatFlags.HorizontalCenter);
+                using(Font titleFont=new Font("Segoe UI",18)) TextRenderer.DrawText(g,title,titleFont,new Rectangle(message.X,message.Y+8,600,34),Theme.Text,TextFormatFlags.HorizontalCenter);
                 TextRenderer.DrawText(g,"HEAVYSHOT   •   Ctrl+A: tela inteira   •   Esc: cancelar",Theme.Body,new Rectangle(message.X,message.Y+45,600,24),Theme.Muted,TextFormatFlags.HorizontalCenter);
             }
         }
@@ -172,11 +225,11 @@ namespace HeavyShot
                 using(TextPrompt prompt=new TextPrompt())
                 {
                     if(prompt.ShowDialog(this)==DialogResult.OK && !String.IsNullOrWhiteSpace(prompt.Value))
-                    { Annotation text=new Annotation { Tool=tool,Color=ink,Width=stroke,Text=prompt.Value }; text.Points.Add(anchor); document.Add(text); RefreshState(); }
+                    { Annotation text=new Annotation { Tool=tool,Color=ink,Width=stroke,Text=prompt.Value,Opacity=opacity }; text.Points.Add(anchor); document.Add(text); RefreshState(); }
                 }
                 return;
             }
-            draft=new Annotation { Tool=tool,Color=ink,Width=stroke }; draft.Points.Add(anchor); Capture=true;
+            draft=new Annotation { Tool=tool,Color=ink,Width=stroke,Opacity=opacity }; draft.Points.Add(anchor); Capture=true;
         }
         protected override void OnMouseMove(MouseEventArgs e)
         {
@@ -229,8 +282,9 @@ namespace HeavyShot
             using(SaveFileDialog dialog=new SaveFileDialog())
             {
                 dialog.Title="Salvar captura — HeavyShot"; dialog.Filter="Imagem PNG|*.png|Imagem JPEG|*.jpg|Bitmap|*.bmp";
-                dialog.FileName="HeavyShot-"+DateTime.Now.ToString("yyyy-MM-dd-HHmmss")+".png";
-                dialog.DefaultExt="png"; dialog.AddExtension=true; dialog.OverwritePrompt=true;
+                string extension=format.SelectedIndex==1?"jpg":format.SelectedIndex==2?"bmp":"png";
+                dialog.FilterIndex=format.SelectedIndex+1;dialog.FileName="HeavyShot-"+DateTime.Now.ToString("yyyy-MM-dd-HHmmss")+"."+extension;
+                dialog.DefaultExt=extension; dialog.AddExtension=true; dialog.OverwritePrompt=true;
                 if(Directory.Exists(settings.LastDirectory)) dialog.InitialDirectory=settings.LastDirectory;
                 if(dialog.ShowDialog(this)!=DialogResult.OK) return;
                 try
@@ -247,7 +301,7 @@ namespace HeavyShot
         }
         protected override bool ProcessCmdKey(ref Message msg,Keys key)
         {
-            if(key==Keys.Escape) { Close(); return true; }
+            if(key==Keys.Escape) { if(paletteOpen){paletteOpen=false;RefreshState();}else Close(); return true; }
             if(key==(Keys.Control|Keys.C) || key==Keys.Enter) { CopyImage(); return true; }
             if(key==(Keys.Control|Keys.S)) { SaveImage(); return true; }
             if(key==(Keys.Control|Keys.Z)) { document.Undo(); RefreshState(); return true; }
@@ -269,8 +323,8 @@ namespace HeavyShot
         {
             Text="HeavyShot — adicionar texto"; ClientSize=new Size(430,190); StartPosition=FormStartPosition.CenterParent;
             FormBorderStyle=FormBorderStyle.FixedDialog; MinimizeBox=MaximizeBox=false; TopMost=true;
-            BackColor=Theme.Background; ForeColor=Color.White; Font=Theme.Body;
-            input.SetBounds(20,22,390,100); input.Multiline=true; input.AcceptsReturn=true; input.BackColor=Theme.Surface; input.ForeColor=Color.White; input.BorderStyle=BorderStyle.FixedSingle; Controls.Add(input);
+            BackColor=Theme.Background; ForeColor=Theme.Text; Font=Theme.Body;
+            input.SetBounds(20,22,390,100); input.Multiline=true; input.AcceptsReturn=true; input.BackColor=Theme.Surface; input.ForeColor=Theme.Text; input.BorderStyle=BorderStyle.FixedSingle; Controls.Add(input);
             ActionButton ok=new ActionButton("Adicionar","Adicionar texto"); ok.SetBounds(285,140,125,34); ok.Primary=true; ok.DialogResult=DialogResult.OK; Controls.Add(ok);
             ActionButton cancel=new ActionButton("Cancelar","Cancelar texto"); cancel.SetBounds(150,140,125,34); cancel.DialogResult=DialogResult.Cancel; Controls.Add(cancel); CancelButton=cancel;
             Shown+=delegate { input.Focus(); };

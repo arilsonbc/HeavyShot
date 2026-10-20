@@ -20,7 +20,7 @@ if($Test) {
 }
 if($Package) {
     Copy-Item -LiteralPath (Join-Path $root 'PORTABLE.txt') -Destination $dist
-    $archive=Join-Path $root 'HeavyShot-0.1.0-portable.zip'
+    $archive=Join-Path $root 'HeavyShot-0.2.0-portable.zip'
     Compress-Archive -LiteralPath (Join-Path $dist 'HeavyShot.exe'),(Join-Path $dist 'HeavyShot.exe.config'),(Join-Path $dist 'PORTABLE.txt') -DestinationPath $archive -Force
     $hashes=@(Get-FileHash -LiteralPath (Join-Path $dist 'HeavyShot.exe'),$archive -Algorithm SHA256 | ForEach-Object { $_.Hash+'  '+[IO.Path]::GetFileName($_.Path) })
     $hashes | Set-Content -LiteralPath (Join-Path $root 'SHA256SUMS.txt') -Encoding ascii

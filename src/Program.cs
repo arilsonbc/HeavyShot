@@ -10,8 +10,8 @@ using System.Xml.Serialization;
 [assembly: AssemblyDescription("Captura e anotação portátil para Windows")]
 [assembly: AssemblyCompany("HeavyShot")]
 [assembly: AssemblyProduct("HeavyShot")]
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: AssemblyVersion("0.2.0.0")]
+[assembly: AssemblyFileVersion("0.2.0.0")]
 
 namespace HeavyShot
 {
@@ -20,8 +20,10 @@ namespace HeavyShot
         public bool CaptureCursor;
         public bool UsePrintScreen;
         public string LastDirectory="";
-        public int Ink=Color.FromArgb(255,89,94).ToArgb();
+        public int Ink=Color.FromArgb(241,92,98).ToArgb();
         public int Stroke=3;
+        public int Opacity=100;
+        internal bool Persist=true;
         public static string FilePath { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"HeavyShot.settings.xml"); } }
         public static Settings Load()
         {
@@ -30,6 +32,7 @@ namespace HeavyShot
         }
         public bool Save()
         {
+            if(!Persist)return true;
             try
             {
                 string temp=FilePath+".tmp";
@@ -43,7 +46,7 @@ namespace HeavyShot
 
     internal static class Program
     {
-        internal static readonly string Version="0.1.0";
+        internal static readonly string Version="0.2.0";
         [STAThread] private static int Main(string[] args)
         {
             Native.EnableDpi(); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
@@ -73,16 +76,16 @@ namespace HeavyShot
             this.trayStart=trayStart; this.demo=demo;
             Text="HeavyShot"; ClientSize=new Size(580,460); AutoScaleMode=AutoScaleMode.Dpi;
             FormBorderStyle=FormBorderStyle.FixedSingle; MaximizeBox=false; StartPosition=FormStartPosition.CenterScreen;
-            BackColor=Theme.Background; ForeColor=Color.White; Font=Theme.Body;
+            BackColor=Theme.Background; ForeColor=Theme.Text; Font=Theme.Body;
             try { Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { Icon=SystemIcons.Application; }
-            Controls.Add(Theme.Label("HEAVYSHOT",32,30,400,38,22,Color.White));
+            Controls.Add(Theme.Label("HeavyShot",32,30,400,38,22,Theme.Text));
             Controls.Add(Theme.Label("Capture uma ideia. Deixe sua marca.",34,75,500,28,12,Theme.Muted));
             ActionButton capture=new ActionButton("Nova captura     Ctrl + Shift + S","Nova captura");
             capture.SetBounds(34,132,512,54); capture.Primary=true; capture.Click+=delegate { BeginCapture(); }; Controls.Add(capture);
             Controls.Add(Theme.Label("Selecione • anote • copie ou salve",34,201,500,28,11,Theme.Muted));
-            CheckBox cursor=new CheckBox { Text="Incluir o cursor na captura",Checked=settings.CaptureCursor,Location=new Point(36,250),Size=new Size(480,28),ForeColor=Color.White };
+            CheckBox cursor=new CheckBox { Text="Incluir o cursor na captura",Checked=settings.CaptureCursor,Location=new Point(36,250),Size=new Size(480,28),ForeColor=Theme.Text };
             cursor.CheckedChanged+=delegate { settings.CaptureCursor=cursor.Checked; SaveSettings(); }; Controls.Add(cursor);
-            print=new CheckBox { Text="Usar também a tecla Print Screen",Checked=settings.UsePrintScreen,Location=new Point(36,284),Size=new Size(480,28),ForeColor=Color.White };
+            print=new CheckBox { Text="Usar também a tecla Print Screen",Checked=settings.UsePrintScreen,Location=new Point(36,284),Size=new Size(480,28),ForeColor=Theme.Text };
             print.CheckedChanged+=delegate { settings.UsePrintScreen=print.Checked; RegisterShortcuts(); SaveSettings(); }; Controls.Add(print);
             status=Theme.Label("",36,324,510,44,9,Theme.Muted); Controls.Add(status);
             Controls.Add(Theme.Label("PORTABLE  /  v"+Program.Version+"  /  processamento local",36,391,460,24,9,Theme.Muted));

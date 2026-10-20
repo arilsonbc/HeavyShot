@@ -71,34 +71,47 @@ namespace HeavyShot
         private NotifyIcon tray;
         private Label status;
         private CheckBox print;
-        internal HomeForm(bool trayStart,bool demo)
+        private readonly bool previewMode;
+        internal HomeForm(bool trayStart,bool demo,bool previewMode=false)
         {
+            this.previewMode=previewMode;if(previewMode)settings.Persist=false;
             this.trayStart=trayStart; this.demo=demo;
-            Text="HeavyShot"; ClientSize=new Size(580,460); AutoScaleMode=AutoScaleMode.Dpi;
+            Text="HeavyShot"; ClientSize=new Size(640,654); AutoScaleMode=AutoScaleMode.Dpi;
             FormBorderStyle=FormBorderStyle.FixedSingle; MaximizeBox=false; StartPosition=FormStartPosition.CenterScreen;
             BackColor=Theme.Background; ForeColor=Theme.Text; Font=Theme.Body;
             try { Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { Icon=SystemIcons.Application; }
-            Controls.Add(Theme.Label("HeavyShot",32,30,400,38,22,Theme.Text));
-            Controls.Add(Theme.Label("Capture uma ideia. Deixe sua marca.",34,75,500,28,12,Theme.Muted));
-            ActionButton capture=new ActionButton("Nova captura     Ctrl + Shift + S","Nova captura");
-            capture.SetBounds(34,132,512,54); capture.Primary=true; capture.Click+=delegate { BeginCapture(); }; Controls.Add(capture);
-            Controls.Add(Theme.Label("Selecione • anote • copie ou salve",34,201,500,28,11,Theme.Muted));
-            CheckBox cursor=new CheckBox { Text="Incluir o cursor na captura",Checked=settings.CaptureCursor,Location=new Point(36,250),Size=new Size(480,28),ForeColor=Theme.Text };
-            cursor.CheckedChanged+=delegate { settings.CaptureCursor=cursor.Checked; SaveSettings(); }; Controls.Add(cursor);
-            print=new CheckBox { Text="Usar também a tecla Print Screen",Checked=settings.UsePrintScreen,Location=new Point(36,284),Size=new Size(480,28),ForeColor=Theme.Text };
-            print.CheckedChanged+=delegate { settings.UsePrintScreen=print.Checked; RegisterShortcuts(); SaveSettings(); }; Controls.Add(print);
-            status=Theme.Label("",36,324,510,44,9,Theme.Muted); Controls.Add(status);
-            Controls.Add(Theme.Label("PORTABLE  /  v"+Program.Version+"  /  processamento local",36,391,460,24,9,Theme.Muted));
+            HomeSurface surface=new HomeSurface { Dock=DockStyle.Fill };Controls.Add(surface);
+            surface.Controls.Add(Theme.Label("HeavyShot",76,27,230,35,18,Color.Black));
+            surface.Controls.Add(Theme.Label("PORTABLE",511,34,97,22,9,Theme.Muted));
+            Label headline=Theme.Label("Sua tela.\nSua mensagem.",30,110,400,130,30,Color.Black);
+            headline.Font=new Font("Segoe UI",30,FontStyle.Bold);surface.Controls.Add(headline);
+            surface.Controls.Add(Theme.Label("Capture, anote e compartilhe em segundos.",33,244,570,26,11,Theme.Muted));
+            ActionButton capture=new ActionButton("Nova captura      Ctrl + Shift + S","Nova captura");
+            capture.SetBounds(32,286,576,60);capture.Primary=true;capture.Font=new Font("Segoe UI",12,FontStyle.Bold);
+            capture.Click+=delegate { BeginCapture(); };surface.Controls.Add(capture);
+            surface.Controls.Add(Theme.Label("Selecione uma área. O editor aparece na hora.",33,354,560,24,10,Theme.Muted));
+            surface.Controls.Add(Theme.Label("Capturar o cursor",52,401,460,24,11,Color.Black));
+            surface.Controls.Add(Theme.Label("Inclua o ponteiro na imagem",52,427,460,20,9,Theme.Muted));
+            ToggleSwitch cursor=new ToggleSwitch { Checked=settings.CaptureCursor,Location=new Point(544,409),BackColor=Color.FromArgb(247,247,247),AccessibleName="Incluir o cursor na captura" };
+            cursor.CheckedChanged+=delegate { settings.CaptureCursor=cursor.Checked; SaveSettings(); };surface.Controls.Add(cursor);
+            surface.Controls.Add(Theme.Label("Atalho Print Screen",52,469,460,24,11,Color.Black));
+            surface.Controls.Add(Theme.Label("Use também a tecla de captura do teclado",52,495,460,20,9,Theme.Muted));
+            print=new ToggleSwitch { Checked=settings.UsePrintScreen,Location=new Point(544,477),BackColor=Color.FromArgb(247,247,247),AccessibleName="Usar também a tecla Print Screen" };
+            print.CheckedChanged+=delegate { settings.UsePrintScreen=print.Checked; RegisterShortcuts(); SaveSettings(); };surface.Controls.Add(print);
+            status=Theme.Label("",32,562,576,40,9,Theme.Muted);surface.Controls.Add(status);
+            surface.Controls.Add(Theme.Label("LOCAL POR NATUREZA",32,611,420,20,8,Theme.Muted));
+            surface.Controls.Add(Theme.Label("v"+Program.Version,550,609,70,22,9,Theme.Muted));
+            if(previewMode) { status.Text="Pronto para capturar. Disponível também na bandeja.";return; }
             ContextMenuStrip menu=new ContextMenuStrip();
             menu.Items.Add("Nova captura",null,delegate { BeginCapture(); }); menu.Items.Add("Abrir HeavyShot",null,delegate { ShowHome(); });
             menu.Items.Add(new ToolStripSeparator()); menu.Items.Add("Sair",null,delegate { exiting=true; Close(); });
             tray=new NotifyIcon { Icon=Icon,Text="HeavyShot — Ctrl+Shift+S",ContextMenuStrip=menu,Visible=true };
             tray.DoubleClick+=delegate { BeginCapture(); };
         }
-        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); RegisterShortcuts(); }
+        protected override void OnHandleCreated(EventArgs e) { base.OnHandleCreated(e); if(!previewMode)RegisterShortcuts(); }
         protected override void OnShown(EventArgs e)
         {
-            base.OnShown(e); RegisterShortcuts();
+            base.OnShown(e); if(previewMode)return; RegisterShortcuts();
             if (trayStart) Hide();
             if (demo) BeginInvoke(new Action(BeginCapture));
         }

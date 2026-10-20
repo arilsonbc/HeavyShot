@@ -1,0 +1,8 @@
+dist/
+tests/results/
+*.zip
+SHA256SUMS.txt
+HeavyShot.settings.xml*
+*.user
+*.suo
+.vs/

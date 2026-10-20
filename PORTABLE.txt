@@ -1,0 +1,23 @@
+HeavyShot 0.1.0 — Windows portable
+
+1. Extraia o ZIP para uma pasta com permissão de escrita.
+2. Execute HeavyShot.exe. Nenhum instalador ou acesso de administrador é necessário.
+3. Clique em Nova captura ou pressione Ctrl+Shift+S.
+4. Arraste para selecionar uma região. Use a barra para anotar.
+5. Ctrl+C ou Enter copia a imagem; Ctrl+S salva PNG, JPEG ou BMP.
+
+V: selecionar/mover/redimensionar; P: caneta; M: marcador; L: linha;
+A: seta; R: retângulo; E: elipse; T: texto.
+Ctrl+Z: desfazer; Ctrl+Y: refazer; Ctrl+A: tela inteira; Esc: cancelar.
+
+Fechar a janela principal mantém o programa na bandeja.
+Para encerrar, clique com o botão direito no ícone da bandeja e escolha Sair.
+Print Screen é opcional: habilite na janela principal se desejar.
+
+Preferências ficam em HeavyShot.settings.xml ao lado do executável.
+Para remover, encerre o programa e apague a pasta. Não há autoinicialização.
+Requer .NET Framework 4.8 (componente incluído em versões atuais de Windows 10/11).
+
+Esta primeira versão funciona localmente, sem upload ou telemetria.
+A captura usa GDI: conteúdo protegido, jogos em tela exclusiva e HDR podem ter limitações.
+Binário ainda sem assinatura digital; não há instalador.

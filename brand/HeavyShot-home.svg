@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="654" viewBox="0 0 640 654">
+<rect width="640" height="654" fill="white"/>
+<g transform="translate(28 22) scale(.625)"><path d="M8 24V8H24V14H14V24ZM40 8H56V24H50V14H40ZM8 40H14V50H24V56H8ZM50 40H56V56H40V50H50ZM22 20H28V29H36V20H42V44H36V35H28V44H22Z"/></g>
+<g font-family="Segoe UI,Arial,sans-serif" fill="black">
+<text x="82" y="53" font-size="24">HeavyShot</text><text x="514" y="46" font-size="11" fill="#6e6e6e">PORTABLE</text>
+<path d="M32 84H608M32 546H608" stroke="#e6e6e6"/>
+<text x="36" y="154" font-size="40" font-weight="700">Sua tela.</text><text x="36" y="207" font-size="40" font-weight="700">Sua mensagem.</text>
+<rect x="432" y="126" width="168" height="112" rx="16" fill="#f6f6f6"/>
+<path d="M452 146H564V212H452Z" stroke="black" stroke-width="2" stroke-dasharray="5 3" fill="none"/>
+<path d="M470 168H536M470 180H520" stroke="#c8c8c8" stroke-width="4"/>
+<path d="M554 201L577 218L565 221L560 232Z"/>
+<text x="36" y="260" font-size="14" fill="#6e6e6e">Capture, anote e compartilhe em segundos.</text>
+<rect x="32" y="286" width="576" height="60" rx="8"/>
+<text x="320" y="323" fill="white" text-anchor="middle" font-size="16" font-weight="600">Nova captura　 Ctrl + Shift + S</text>
+<text x="36" y="369" font-size="13" fill="#6e6e6e">Selecione uma área. O editor aparece na hora.</text>
+<rect x="32" y="388" width="576" height="136" rx="16" fill="#f7f7f7"/>
+<path d="M52 456H588" stroke="#e4e4e4"/>
+<text x="56" y="419" font-size="14">Capturar o cursor</text><text x="56" y="442" font-size="12" fill="#6e6e6e">Inclua o ponteiro na imagem</text>
+<text x="56" y="487" font-size="14">Atalho Print Screen</text><text x="56" y="510" font-size="12" fill="#6e6e6e">Use também a tecla de captura do teclado</text>
+<rect x="545" y="412" width="42" height="24" rx="12" fill="#d3d3d3"/><circle cx="557" cy="424" r="8" fill="white"/>
+<rect x="545" y="480" width="42" height="24" rx="12" fill="#d3d3d3"/><circle cx="557" cy="492" r="8" fill="white"/>
+<text x="35" y="578" font-size="12" fill="#6e6e6e">Pronto para capturar. Disponível também na bandeja.</text>
+<text x="35" y="623" font-size="10" fill="#6e6e6e">LOCAL POR NATUREZA</text><text x="553" y="623" font-size="11" fill="#6e6e6e">v0.3.0</text>
+</g></svg>

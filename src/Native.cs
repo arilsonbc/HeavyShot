@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
@@ -16,6 +17,9 @@ namespace HeavyShot
         [DllImport("user32.dll")] private static extern bool GetIconInfo(IntPtr icon, out IconInfo info);
         [DllImport("user32.dll")] private static extern bool DrawIconEx(IntPtr dc, int x, int y, IntPtr icon, int width, int height, uint step, IntPtr brush, uint flags);
         [DllImport("gdi32.dll")] private static extern bool DeleteObject(IntPtr obj);
+        [DllImport("user32.dll")] private static extern IntPtr GetDC(IntPtr window);
+        [DllImport("user32.dll")] private static extern int ReleaseDC(IntPtr window, IntPtr dc);
+        [DllImport("gdi32.dll", SetLastError=true)] private static extern bool BitBlt(IntPtr target,int x,int y,int width,int height,IntPtr source,int sourceX,int sourceY,uint operation);
         [StructLayout(LayoutKind.Sequential)] private struct CursorInfo { public int Size, Flags; public IntPtr Cursor; public Point Position; }
         [StructLayout(LayoutKind.Sequential)] private struct IconInfo { public bool IsIcon; public int X, Y; public IntPtr Mask, Color; }
         internal static void EnableDpi()
@@ -28,7 +32,20 @@ namespace HeavyShot
             {
                 using (Graphics g = Graphics.FromImage(result))
                 {
-                    g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size, CopyPixelOperation.SourceCopy | CopyPixelOperation.CaptureBlt);
+                    IntPtr source=GetDC(IntPtr.Zero);
+                    if(source==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error());
+                    try
+                    {
+                        IntPtr target=g.GetHdc();
+                        try
+                        {
+                            // Framework CopyFromScreen rejects combined enum flags; use Win32 for CAPTUREBLT.
+                            if(!BitBlt(target,0,0,bounds.Width,bounds.Height,source,bounds.X,bounds.Y,0x40cc0020))
+                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                        }
+                        finally { g.ReleaseHdc(target); }
+                    }
+                    finally { ReleaseDC(IntPtr.Zero,source); }
                     if (cursor) PaintCursor(g, bounds.Location);
                 }
                 return result;

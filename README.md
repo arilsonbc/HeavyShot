@@ -40,9 +40,12 @@ No PowerShell do Windows, usando o compilador .NET Framework disponível no sist
 
 ```powershell
 .\build.ps1 -Test -Package
+.\test-capture.ps1
 ```
 
 O executável é produzido em `dist/HeavyShot.exe`, os resultados ficam em `tests/results/` e o ZIP portátil na raiz. Os testes cobrem pixels do recorte, anotações, histórico, exportação PNG/JPEG e eventos do editor. `--demo` abre o editor sobre uma imagem sintética, sem capturar a tela, para revisão visual.
+
+`test-capture.ps1` verifica a captura real com e sem cursor em uma sessão Windows com desktop disponível, sem salvar a imagem. Veja [validação e limites](docs/validation.md).
 
 ## Arquitetura e limites
 

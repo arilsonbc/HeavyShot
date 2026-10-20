@@ -13,6 +13,7 @@ namespace HeavyShot
         internal static readonly Color AccentSoft = Color.FromArgb(234,240,255);
         internal static readonly Color Muted = Color.FromArgb(105,115,134);
         internal static readonly Color Text = Color.FromArgb(32,38,51);
+        internal static readonly Color Icon = Color.FromArgb(108,118,137);
         internal static readonly Color Border = Color.FromArgb(224,228,236);
         internal static readonly Font Body = new Font("Segoe UI", 10);
         internal static GraphicsPath Rounded(Rectangle r, int radius)
@@ -24,7 +25,7 @@ namespace HeavyShot
         internal static Label Label(string text, int x, int y, int w, int h, float size, Color color)
         { return new Label { Text=text, Location=new Point(x,y), Size=new Size(w,h), ForeColor=color, Font=new Font("Segoe UI",size), BackColor=Color.Transparent }; }
     }
-    internal sealed class ActionButton : Button
+    internal sealed class ActionButton : Control, IButtonControl
     {
         internal bool Active;
         internal bool Primary;
@@ -33,9 +34,24 @@ namespace HeavyShot
         private bool hover;
         internal ActionButton(string text, string hint)
         {
-            Text=text; AccessibleName=hint; FlatStyle=FlatStyle.Flat; FlatAppearance.BorderSize=0;
+            Text=text; AccessibleName=hint; AccessibleRole=AccessibleRole.PushButton;
+            SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer,true);
             BackColor=Theme.Surface; ForeColor=Theme.Text; Font=Theme.Body; Cursor=Cursors.Hand;
             Size=new Size(40,36); Margin=new Padding(3); TabStop=false;
+        }
+        public DialogResult DialogResult { get; set; }
+        public void NotifyDefault(bool value) { }
+        public void PerformClick() { if(Enabled && Visible) OnClick(EventArgs.Empty); }
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+            Form owner=FindForm();
+            if(owner!=null && !owner.IsDisposed && DialogResult!=DialogResult.None) owner.DialogResult=DialogResult;
+        }
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if(e.KeyCode==Keys.Space || e.KeyCode==Keys.Enter) { PerformClick(); e.Handled=true; }
         }
         protected override void OnMouseEnter(EventArgs e) { hover=true; Invalidate(); base.OnMouseEnter(e); }
         protected override void OnMouseLeave(EventArgs e) { hover=false; Invalidate(); base.OnMouseLeave(e); }
@@ -45,7 +61,7 @@ namespace HeavyShot
             Color fill=Primary ? Theme.Accent : Active ? Theme.AccentSoft : hover && Enabled ? Theme.Background : Theme.Surface;
             using (GraphicsPath p=Theme.Rounded(new Rectangle(0,0,Width-1,Height-1),8))
             using (Brush b=new SolidBrush(fill)) e.Graphics.FillPath(b,p);
-            Color color=!Enabled ? Color.FromArgb(190,196,207) : Primary ? Color.White : Active ? Theme.Accent : ForeColor;
+            Color color=!Enabled ? Color.FromArgb(200,206,216) : Primary ? Color.White : Active ? Theme.Accent : String.IsNullOrEmpty(Glyph) ? ForeColor : Theme.Icon;
             if(!Swatch.IsEmpty)
             { using(Brush b=new SolidBrush(Swatch)) e.Graphics.FillEllipse(b,Width/2-10,Height/2-10,20,20); }
             else if(!String.IsNullOrEmpty(Glyph))

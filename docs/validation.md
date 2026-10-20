@@ -1,4 +1,12 @@
-# Validação de 0.2.0
+# Validação de 0.3.0
+
+- 39 verificações automatizadas aprovadas, incluindo botões sem acabamento nativo, ausência de contornos escuros e renderização da nova tela inicial.
+- Tela inicial e ícone monocromáticos conferidos em renderizações do aplicativo. Ícone gerado em 16, 24, 32, 48, 64, 128 e 256 px.
+- SVGs editáveis de logo, símbolo e tela em `brand/`. O Figma conectado atingiu o limite do plano Starter; este redesign ainda não foi publicado no arquivo do Figma.
+- Pacote portable extraído e hash do executável comparado com o build.
+- A validação desta versão é automatizada; os limites de clipboard entre aplicativos, HDR e DPI misto continuam pendentes. A captura real descrita abaixo foi verificada na versão 0.2.0.
+
+## Histórico — 0.2.0
 
 - Interface baseada no layout editável do Figma: https://www.figma.com/design/prmFuOyE1k4FQKpfj5i2UZ?node-id=3-37
 - Painéis claros e arredondados; barra vertical junto à seleção; ações abaixo dela; ícones desenhados na grade de 24 px; estados ativo/inativo e painel de cor, espessura e opacidade.
